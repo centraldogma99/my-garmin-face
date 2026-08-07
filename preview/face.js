@@ -53,11 +53,10 @@
 
     /* weekday bezel arc */
     wdR: 202,
-    wdStep: 10.6, // degrees between labels
+    wdStep: 12.5, // degrees between labels
     wdFont: 18,
-    wdFontOn: 20,
-    wdBarDy: 12, // underline sits below the glyph in screen space, not radially
-    wdBarW: 19,
+    wdBarR: 189,     // highlight arc, just inboard of the glyphs
+    wdBarSpan: 7.8,  // degrees of arc the highlight covers
     wdBarH: 3,
 
     /* date | weather strip */
@@ -357,21 +356,28 @@
     var cx = g(227);
     var cy = g(227);
 
+    /* Each glyph is rotated to stand on its own radius, so the row reads as a
+       fan struck from the centre rather than as text sitting on an arch. */
     for (var i = 0; i < 7; i++) {
-      var th = ((i - 3) * L.wdStep * Math.PI) / 180;
+      var deg = (i - 3) * L.wdStep;
+      var th = (deg * Math.PI) / 180;
       var on = i === today;
-      var x = cx + Math.sin(th) * g(L.wdR);
-      var y = cy - Math.cos(th) * g(L.wdR);
       var color = on ? (opts.dim ? '#8A4413' : C.accent) : opts.dim ? '#2E353D' : C.textLow;
 
-      text(ctx, labels[i], x, y, {
-        size: g(on ? L.wdFontOn : L.wdFont),
-        weight: on ? 700 : 500,
+      ctx.save();
+      ctx.translate(cx + Math.sin(th) * g(L.wdR), cy - Math.cos(th) * g(L.wdR));
+      ctx.rotate(th);
+      text(ctx, labels[i], 0, 0, {
+        size: g(L.wdFont),
+        weight: 500,
         color: color,
       });
+      ctx.restore();
 
       if (on) {
-        rect(ctx, x - g(L.wdBarW) / 2, y + g(L.wdBarDy), g(L.wdBarW), g(L.wdBarH), color);
+        var half = L.wdBarSpan / 2;
+        arc(ctx, cx, cy, g(L.wdBarR),
+            -90 + deg - half, -90 + deg + half, g(L.wdBarH), color);
       }
     }
   }

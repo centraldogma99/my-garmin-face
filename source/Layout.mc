@@ -39,9 +39,9 @@ module Layout {
 
     // ---- weekday arc ------------------------------------------------------
     const WD_R = 202;
-    const WD_STEP = 10.6;   // degrees between labels
-    const WD_BAR_DY = 12;   // underline offset below the glyph, in screen space
-    const WD_BAR_W = 19;
+    const WD_STEP = 12.5;    // degrees between labels
+    const WD_BAR_R = 189;    // highlight arc, just inboard of the glyphs
+    const WD_BAR_SPAN = 7.8; // degrees of arc the highlight covers
     const WD_BAR_H = 3;
 
     // ---- date | weather strip --------------------------------------------

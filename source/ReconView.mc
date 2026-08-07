@@ -17,7 +17,6 @@ class ReconView extends WatchUi.WatchFace {
     private const STRIP_FONT = Graphics.FONT_TINY;
     private const LABEL_FONT = Graphics.FONT_XTINY;
     private const WD_FONT = Graphics.FONT_XTINY;
-    private const WD_FONT_ON = Graphics.FONT_TINY;
     private const BB_VALUE_FONT = Graphics.FONT_TINY;
     private const BAT_FONT = Graphics.FONT_XTINY;
 
@@ -96,9 +95,15 @@ class ReconView extends WatchUi.WatchFace {
 
     private function drawWeekdays(dc as Graphics.Dc, dim as Boolean) as Void {
         var r = Layout.f(Layout.WD_R);
+        var half = Layout.WD_BAR_SPAN / 2.0;
 
+        // Every glyph is rotated to stand on its own radius, so the row reads
+        // as a fan struck from the centre rather than as text on an arch. The
+        // system fonts have no bold variant, so today is marked by the accent
+        // colour and the underline arc alone — never by weight or size.
         for (var i = 0; i < 7; i++) {
-            var th = (i - 3) * Layout.WD_STEP * Gfx.DEG;
+            var deg = (i - 3) * Layout.WD_STEP;
+            var th = deg * Gfx.DEG;
             var on = (i == _metrics.weekday);
             var x = Layout.cx + (Math.sin(th) * r).toNumber();
             var y = Layout.cy - (Math.cos(th) * r).toNumber();
@@ -110,16 +115,15 @@ class ReconView extends WatchUi.WatchFace {
                 color = dim ? Theme.AOD_LOW : Theme.TEXT_LOW;
             }
 
-            Gfx.text(dc, x, y, on ? WD_FONT_ON : WD_FONT, _weekdays[i],
-                Graphics.TEXT_JUSTIFY_CENTER, color);
+            Gfx.angledText(dc, x, y, WD_FONT, _weekdays[i],
+                Graphics.TEXT_JUSTIFY_CENTER, color, deg);
 
             if (on) {
-                Gfx.box(dc,
-                    x - Layout.u(Layout.WD_BAR_W) / 2,
-                    y + Layout.u(Layout.WD_BAR_DY),
-                    Layout.u(Layout.WD_BAR_W),
-                    Layout.u(Layout.WD_BAR_H),
-                    color);
+                dc.setPenWidth(Layout.u(Layout.WD_BAR_H));
+                Gfx.fill(dc, color);
+                Gfx.arcScreen(dc, Layout.cx, Layout.cy, Layout.u(Layout.WD_BAR_R),
+                    -90.0 + deg - half, -90.0 + deg + half);
+                dc.setPenWidth(1);
             }
         }
     }

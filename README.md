@@ -10,7 +10,7 @@ weighted support tier.
 
 | Data                | Where                                                            |
 | ------------------- | ---------------------------------------------------------------- |
-| Weekday             | Arc on the top bezel, `일 월 화 수 목 금 토`, today in accent + underline |
+| Weekday             | Fan on the top bezel, `일 월 화 수 목 금 토`, today in accent + arc underline |
 | Date                | Left of the strip under the weekday arc, `MM.DD`                  |
 | Time                | Centre, 24-hour, `HH:MM`, always two digits                       |
 | Weather + outdoor temp | Right of the strip: drawn condition glyph + current temperature |
@@ -43,6 +43,13 @@ day between 40 and 100, so a plain 0–100 bar chart collapses into a solid slab
 Each column is filled dim and capped bright, which keeps the absolute level
 legible *and* draws the shape of the curve. The most recent column is capped in
 white as a "now" marker.
+
+**The weekday row is a fan, not an arch.** Each glyph is rotated to stand on
+its own radius, and the highlight under today is an arc segment rather than a
+straight bar, so the whole row belongs to the bezel instead of sitting on top of
+it. Garmin's system fonts have no bold variant, so today is marked by the accent
+colour and that arc alone — never by weight or size, which the preview must not
+promise either.
 
 **The bezel carries the two cyclical values.** Weekday on the top arc, battery
 gauge on the bottom arc. Both are things you glance at rather than read, and
@@ -142,7 +149,11 @@ Check them in this order:
 5. `Gfx.arcScreen` converts screen degrees to Garmin's counter-clockwise
    convention. Confirm the battery gauge fills from the lower left toward the
    lower right; if it sweeps the wrong way the conversion is inverted.
-6. Font sizes. `Layout` positions everything by anchor and relies on
+6. `Dc.drawAngledText` is what rotates the weekday glyphs, and its angle is
+   assumed to be counter-clockwise like `drawArc` — `Gfx.angledText` negates
+   accordingly. If the fan leans the wrong way, drop the negation. Devices
+   without the method fall back to upright glyphs automatically.
+7. Font sizes. `Layout` positions everything by anchor and relies on
    `TEXT_JUSTIFY_VCENTER`, so wrong-sized system fonts will not break the
    layout, but the preview's proportions are an approximation — compare the
    simulator against `preview/renders/` and adjust `ReconView`'s font choices.

@@ -97,6 +97,23 @@ module Gfx {
         dc.drawText(x, y, font, str, justify | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
+    //! Text rotated to stand on its own radius. `screenDeg` is the clockwise
+    //! screen angle to turn the glyph by; Garmin measures counter-clockwise,
+    //! hence the negation. Falls back to upright text where the device has no
+    //! drawAngledText.
+    function angledText(
+        dc as Graphics.Dc, x as Number, y as Number, font as Graphics.FontType,
+        str as String, justify as Number, color as Number, screenDeg as Float
+    ) as Void {
+        fill(dc, color);
+        var j = justify | Graphics.TEXT_JUSTIFY_VCENTER;
+        if (dc has :drawAngledText) {
+            dc.drawAngledText(x, y, font, str, j, norm(-screenDeg).toNumber());
+        } else {
+            dc.drawText(x, y, font, str, j);
+        }
+    }
+
     //! First font in `fonts` whose rendering of `str` fits inside `maxW`.
     function fitFont(
         dc as Graphics.Dc, str as String, maxW as Number, fonts as Array<Graphics.FontType>
