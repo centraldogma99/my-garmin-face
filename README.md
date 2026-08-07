@@ -124,6 +124,7 @@ openssl genrsa -out developer_key.pem 4096
 openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem \
   -out developer_key.der -nocrypt
 
+mkdir -p bin
 monkeyc -f monkey.jungle -o bin/recon.prg -y developer_key.der -d fr265 -r
 ```
 
@@ -205,9 +206,13 @@ Check them in this order:
   flags on the first run.
 - `iq:products` covers only the Forerunner 265 family. Other round devices
   should work as-is but have not been looked at.
-- Weekday initials default to Korean. English firmware falls back to
-  `S M T W T F S` via `resources-eng/`, because Hangul glyph coverage in the
-  system font depends on the device's language build.
+- Weekday initials default to Korean, with `S M T W T F S` in `resources-eng/`
+  for English firmware, because Hangul glyph coverage in the system font
+  depends on the device's language build. **The fallback is unverified**: an
+  explicit `base.lang.eng.resourcePath` line failed to parse, so the jungle now
+  relies on the resource compiler resolving qualified directories from
+  `<iq:languages>` on its own. If the weekday glyphs come out blank on English
+  firmware, move the Latin strings into `resources/strings/strings.xml`.
 - The weather strip shows the *current* conditions from
   `Weather.getCurrentConditions()`, not a daily high/low.
 - The body battery window is fixed at 12 hours and its history is rebuilt at

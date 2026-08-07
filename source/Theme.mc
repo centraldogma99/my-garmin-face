@@ -38,13 +38,16 @@ module Theme {
     const AOD_ACCENT  = 0x8A4413;
     const AOD_HAIR    = 0x161A1F;
 
-    //! index 0 = below zone 1 (resting), 1..5 = heart rate zones 1..5
-    const ZONES = [0x48535D, 0x8A98A6, 0x2E9BF0, 0x35C759, 0xFF9500, 0xFF3B30] as Array<Number>;
-
+    //! Zone 0 is "below zone 1" — a resting heart rate, not a missing one.
     function zoneColor(zone as Number) as Number {
-        if (zone < 0) { zone = 0; }
-        if (zone > 5) { zone = 5; }
-        return ZONES[zone];
+        switch (zone) {
+            case 1:  return 0x8A98A6;  // grey
+            case 2:  return 0x2E9BF0;  // blue
+            case 3:  return 0x35C759;  // green
+            case 4:  return 0xFF9500;  // orange
+            case 5:  return 0xFF3B30;  // red
+            default: return 0x48535D;  // resting
+        }
     }
 
     function batteryColor(pct as Float) as Number {

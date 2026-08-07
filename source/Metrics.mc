@@ -46,11 +46,16 @@ class Metrics {
     var bodyBattery as Number or Null = null;
     var bbSeries as Array<Number> or Null = null;
 
-    var wxKind as Number = WX_CLOUDY;
+    var wxKind as Number = 2;  // WX_CLOUDY, set properly in initialize()
     var wxTemp as Number or Null = null;
 
     private var _zones as Array<Number> or Null = null;
-    private var _bbStamp as Number = -BB_REFRESH_SEC;
+    private var _bbStamp as Number = 0;
+
+    function initialize() {
+        wxKind = WX_CLOUDY;
+        _bbStamp = -BB_REFRESH_SEC;   // force the first history read
+    }
 
     function refresh() as Void {
         var now = Time.now();
