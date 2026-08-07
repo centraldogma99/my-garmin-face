@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default resources. Korean weekday initials, as designed.
+  `resources-eng/` overrides these on English firmware, where the system font
+  may not carry Hangul glyphs.
+-->
+<strings>
+    <string id="AppName">RECON</string>
+
+    <string id="Wd0">일</string>
+    <string id="Wd1">월</string>
+    <string id="Wd2">화</string>
+    <string id="Wd3">수</string>
+    <string id="Wd4">목</string>
+    <string id="Wd5">금</string>
+    <string id="Wd6">토</string>
+</strings>

@@ -1,0 +1,19 @@
+{
+  "name": "recon-watchface-preview",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Browser preview harness for the RECON Garmin watch face",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node setup-fonts.mjs",
+    "fonts": "node setup-fonts.mjs",
+    "render": "node render.mjs",
+    "serve": "http-server -p 4321 -c-1 ."
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-kr": "^5.2.5"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

@@ -1,0 +1,8 @@
+project.manifest = manifest.xml
+
+base.sourcePath = source
+base.resourcePath = resources
+
+# English firmware falls back to Latin weekday initials, since Hangul glyph
+# coverage in the system font depends on the device language build.
+base.lang.eng.resourcePath = $(base.lang.eng.resourcePath);resources-eng

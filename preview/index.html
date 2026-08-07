@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RECON — Garmin watch face preview</title>
+    <style>
+      /* Latin + Hangul are separate subsets, so each weight needs both faces.
+         Run `node setup-fonts.mjs` to populate ./fonts (gitignored). */
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 400;
+        font-display: block;
+        src: url('./fonts/latin-400.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 500;
+        font-display: block;
+        src: url('./fonts/latin-500.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 600;
+        font-display: block;
+        src: url('./fonts/latin-600.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 700;
+        font-display: block;
+        src: url('./fonts/latin-700.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 400;
+        font-display: block;
+        src: url('./fonts/kr-400.woff2') format('woff2');
+        unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 500;
+        font-display: block;
+        src: url('./fonts/kr-500.woff2') format('woff2');
+        unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 600;
+        font-display: block;
+        src: url('./fonts/kr-600.woff2') format('woff2');
+        unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-weight: 700;
+        font-display: block;
+        src: url('./fonts/kr-700.woff2') format('woff2');
+        unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #14171a;
+        color: #cfd6dd;
+        font: 13px/1.5 'Noto Sans KR', system-ui, sans-serif;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .stage {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+      canvas#face {
+        border-radius: 50%;
+        background: #000;
+        box-shadow: 0 0 0 10px #23282d, 0 0 0 12px #3a4147, 0 24px 60px rgba(0, 0, 0, 0.7);
+      }
+      .cap {
+        color: #7d8892;
+        letter-spacing: 0.4px;
+      }
+      .panel {
+        min-width: 240px;
+      }
+      .panel h1 {
+        font-size: 15px;
+        letter-spacing: 2px;
+        margin: 0 0 4px;
+        color: #f0f4f7;
+      }
+      .panel p {
+        margin: 0 0 18px;
+        color: #7d8892;
+      }
+      button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 6px;
+        padding: 9px 12px;
+        border: 1px solid #2c333a;
+        border-radius: 6px;
+        background: #1b1f24;
+        color: #cfd6dd;
+        font: inherit;
+        cursor: pointer;
+      }
+      button[aria-pressed='true'] {
+        border-color: #ff6a1a;
+        color: #ff6a1a;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin: 14px 0 6px;
+      }
+      .row label {
+        flex: 1;
+        color: #7d8892;
+      }
+      .sizes {
+        display: flex;
+        gap: 8px;
+      }
+      .sizes button {
+        width: auto;
+        flex: 1;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <canvas id="face" width="454" height="454"></canvas>
+      <div class="cap" id="cap"></div>
+    </div>
+
+    <div class="panel">
+      <h1>RECON</h1>
+      <p>Garmin Connect IQ watch face — design preview</p>
+      <div id="buttons"></div>
+
+      <div class="row"><label>Display size</label></div>
+      <div class="sizes" id="sizes"></div>
+
+      <div class="row"><label>Weekday labels</label></div>
+      <div class="sizes" id="locales"></div>
+    </div>
+
+    <script src="./face.js"></script>
+    <script src="./scenarios.js"></script>
+    <script>
+      const canvas = document.getElementById('face');
+      const ctx = canvas.getContext('2d');
+      let current = 'default';
+      let size = 454;
+      let locale = 'ko';
+
+      function render() {
+        const s = ReconScenarios.SCENARIOS[current];
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = size * ratio;
+        canvas.height = size * ratio;
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ReconFace.draw(ctx, size, s.data, { ...(s.opts || {}), weekdayLocale: locale });
+        document.getElementById('cap').textContent = `${s.label} — ${size}×${size}`;
+      }
+
+      function chips(host, items, get, set) {
+        host.innerHTML = '';
+        items.forEach(([value, label]) => {
+          const b = document.createElement('button');
+          b.textContent = label;
+          b.setAttribute('aria-pressed', String(get() === value));
+          b.onclick = () => {
+            set(value);
+            renderAll();
+          };
+          host.appendChild(b);
+        });
+      }
+
+      function renderAll() {
+        chips(
+          document.getElementById('buttons'),
+          Object.entries(ReconScenarios.SCENARIOS).map(([k, v]) => [k, v.label]),
+          () => current,
+          (v) => (current = v),
+        );
+        chips(
+          document.getElementById('sizes'),
+          [
+            [454, '454'],
+            [416, '416'],
+            [390, '390'],
+            [360, '360'],
+          ],
+          () => size,
+          (v) => (size = v),
+        );
+        chips(
+          document.getElementById('locales'),
+          [
+            ['ko', '일 월 화'],
+            ['en', 'S M T'],
+          ],
+          () => locale,
+          (v) => (locale = v),
+        );
+        render();
+      }
+
+      document.fonts.ready.then(renderAll);
+    </script>
+  </body>
+</html>

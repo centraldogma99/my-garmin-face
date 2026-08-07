@@ -1,0 +1,14 @@
+# Connect IQ build output
+bin/
+*.prg
+*.prg.debug.xml
+*.iq
+
+# developer keys never belong in the repo
+*.der
+*.pem
+
+# preview harness
+preview/node_modules/
+preview/fonts/
+preview/package-lock.json
