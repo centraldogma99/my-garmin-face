@@ -126,11 +126,18 @@
     en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
   };
 
+  var FS = 1; // font stress multiplier, set per draw
+
   var FAMILY = "'Noto Sans KR', 'Noto Sans', 'DejaVu Sans', sans-serif";
 
   /* ------------------------------------------------------------------ *
    * Primitives
    * ------------------------------------------------------------------ */
+  /** Design-unit font size -> device pixels, including the stress multiplier. */
+  function gf(g, v) {
+    return g(v) * FS;
+  }
+
   function font(ctx, size, weight) {
     ctx.font = (weight || 400) + ' ' + size + 'px ' + FAMILY;
   }
@@ -368,7 +375,7 @@
       ctx.translate(cx + Math.sin(th) * g(L.wdR), cy - Math.cos(th) * g(L.wdR));
       ctx.rotate(th);
       text(ctx, labels[i], 0, 0, {
-        size: g(L.wdFont),
+        size: gf(g, L.wdFont),
         weight: 500,
         color: color,
       });
@@ -397,7 +404,7 @@
     );
 
     text(ctx, pad2(data.month) + '.' + pad2(data.day), g(L.dateRight), g(cy), {
-      size: g(L.stripFont),
+      size: gf(g, L.stripFont),
       weight: 600,
       color: hi,
       align: 'right',
@@ -409,7 +416,7 @@
 
     var t = data.weather.temp == null ? '--' : String(Math.round(data.weather.temp));
     text(ctx, t + '°', g(L.tempLeft), g(cy), {
-      size: g(L.stripFont),
+      size: gf(g, L.stripFont),
       weight: 600,
       color: hi,
       align: 'left',
@@ -419,7 +426,7 @@
   function drawTime(ctx, g, data, opts) {
     var hh = pad2(data.hour);
     var mm = pad2(data.minute);
-    var size = g(L.timeFont);
+    var size = gf(g, L.timeFont);
     var color = opts.dim ? '#606A73' : C.textHi;
     var cx = g(227);
     var cy = g(opts.dim ? L.aodTimeCy : L.timeCy);
@@ -455,13 +462,13 @@
     var hrTxt = data.hr == null ? '--' : String(data.hr);
 
     text(ctx, 'HR', g(L.cellL), g(L.labelCy), {
-      size: g(L.labelFont),
+      size: gf(g, L.labelFont),
       weight: 600,
       color: C.textLow,
       tracking: g(1.6),
     });
     text(ctx, hrTxt, g(L.cellL), g(L.valueCy), {
-      size: fitSize(ctx, hrTxt, g(L.cellMaxW), VALUE_SIZES.map(g), 700, g(-0.5)),
+      size: fitSize(ctx, hrTxt, g(L.cellMaxW), VALUE_SIZES.map(function (v) { return gf(g, v); }), 700, g(-0.5)),
       weight: 700,
       color: C.textVal,
       tracking: g(-0.5),
@@ -488,14 +495,14 @@
 
     /* ---- steps ---- */
     text(ctx, 'STEPS', g(L.cellR), g(L.labelCy), {
-      size: g(L.labelFont),
+      size: gf(g, L.labelFont),
       weight: 600,
       color: C.textLow,
       tracking: g(1.4),
     });
     var stepTxt = grouped(data.steps);
     text(ctx, stepTxt, g(L.cellR), g(L.valueCy), {
-      size: fitSize(ctx, stepTxt, g(L.cellMaxW), VALUE_SIZES.map(g), 700, g(-0.5)),
+      size: fitSize(ctx, stepTxt, g(L.cellMaxW), VALUE_SIZES.map(function (v) { return gf(g, v); }), 700, g(-0.5)),
       weight: 700,
       color: C.textVal,
       tracking: g(-0.5),
@@ -510,7 +517,7 @@
   function drawBodyBattery(ctx, g, data) {
     var lx = g(L.bbX0);
     text(ctx, 'BODY BATTERY', lx, g(L.bbLabelCy), {
-      size: g(L.bbLabelFont),
+      size: gf(g, L.bbLabelFont),
       weight: 600,
       color: C.textLow,
       align: 'left',
@@ -518,14 +525,14 @@
     });
     var cur = data.bodyBattery;
     var curTxt = cur == null ? '--' : String(cur);
-    var lw = measure(ctx, 'BODY BATTERY', g(L.bbLabelFont), 600, g(1.4));
+    var lw = measure(ctx, 'BODY BATTERY', gf(g, L.bbLabelFont), 600, g(1.4));
     var tag = data.bbWindowLabel || '12H';
-    var tagW = measure(ctx, tag, g(L.bbLabelFont), 600, g(1.4));
-    var valueLeft = g(L.bbX1) - measure(ctx, curTxt, g(L.bbValueFont), 700, g(-0.5));
+    var tagW = measure(ctx, tag, gf(g, L.bbLabelFont), 600, g(1.4));
+    var valueLeft = g(L.bbX1) - measure(ctx, curTxt, gf(g, L.bbValueFont), 700, g(-0.5));
 
     if (lx + lw + g(9) + tagW <= valueLeft - g(10)) {
       text(ctx, tag, lx + lw + g(9), g(L.bbLabelCy), {
-        size: g(L.bbLabelFont),
+        size: gf(g, L.bbLabelFont),
         weight: 600,
         color: C.textFaint,
         align: 'left',
@@ -534,7 +541,7 @@
     }
 
     text(ctx, curTxt, g(L.bbX1), g(L.bbLabelCy), {
-      size: g(L.bbValueFont),
+      size: gf(g, L.bbValueFont),
       weight: 700,
       color: C.bb,
       align: 'right',
@@ -584,7 +591,7 @@
 
     /* numeric readout */
     var label = Math.round(pct) + '%';
-    var tw = measure(ctx, label, g(L.batFont), 600, g(0.5));
+    var tw = measure(ctx, label, gf(g, L.batFont), 600, g(0.5));
     var iw = g(L.batIconW);
     var total = iw + g(8) + tw;
     var ix = cx - total / 2;
@@ -604,7 +611,7 @@
     );
 
     text(ctx, label, ix + iw + g(8), g(cy), {
-      size: g(L.batFont),
+      size: gf(g, L.batFont),
       weight: 600,
       color: col,
       align: 'left',
@@ -618,6 +625,7 @@
   function drawFace(ctx, size, data, opts) {
     opts = opts || {};
     opts.weekdayLocale = opts.weekdayLocale || 'ko';
+    FS = opts.fontScale || 1;
     var dim = opts.mode === 'aod';
     opts.dim = dim;
 

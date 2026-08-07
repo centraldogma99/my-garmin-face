@@ -4,7 +4,11 @@ A dark, instrument-style face for round Garmin displays. Built for legibility
 first: one dominant readout (the time), everything else in a quiet, evenly
 weighted support tier.
 
-![RECON on a 454px round display](preview/renders/default-454.png)
+![RECON on a Forerunner 265](preview/renders/default-416.png)
+
+Target: **Forerunner 265** (416x416) and **265S** (360x360). The layout is
+resolution-independent, so other round devices only need their id added to
+`manifest.xml`.
 
 ## What it shows
 
@@ -74,8 +78,9 @@ change in the other.**
 ```bash
 cd preview
 npm install          # also copies the Noto Sans KR subsets into ./fonts
-npm run render       # writes ./renders/*.png at 454
-node render.mjs 390  # any display size
+npm run render       # writes ./renders/*.png at 416 and 454
+npm run stress       # font-size stress sheet, see below
+node render.mjs 360  # any display size
 npm run serve        # interactive: scenario, size and weekday-locale switches
 node icon.mjs        # regenerates ../resources/drawables/launcher_icon.png
 ```
@@ -97,23 +102,53 @@ deliberate adjustments keep it honest rather than flattering:
 Letter spacing on the small-caps labels has no equivalent in Monkey C, so
 `Gfx.trackedText` lays those strings out one glyph at a time on device.
 
+**Font stress.** The device picks its own system fonts and they do *not* scale
+linearly with the design units, which is the largest thing the preview cannot
+verify. `npm run stress` re-renders the face with every system-font-bound size
+multiplied by 1.0, 1.15 and 1.3. The layout survives all three with no
+collisions: at 1.15 and above the body battery window tag (`12H`) drops itself,
+which is the designed release valve.
+
+![font stress](preview/renders/font-stress-416.png)
+
 ## Building
 
 Requires the [Connect IQ SDK](https://developer.garmin.com/connect-iq/sdk/)
-(`minApiLevel` 3.2.0), a Java runtime, and a developer key. Install device
-packages for the targets you care about through the SDK Manager first —
-`monkeyc -d <device>` needs them.
+(`minApiLevel` 3.2.0) and a Java runtime. Install the **fr265** device package
+through the SDK Manager first — `monkeyc -d` needs it.
 
 ```bash
-# one-off: generate a developer key
+# one-off: generate a developer key and keep it. The Connect IQ Store ties an
+# app id to the key that first signed it, so losing it means a new listing.
 openssl genrsa -out developer_key.pem 4096
 openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem \
   -out developer_key.der -nocrypt
 
-monkeyc -f monkey.jungle -o bin/recon.prg -y developer_key.der -d fenix847mm
-connectiq                                   # start the simulator
-monkeydo bin/recon.prg fenix847mm
+monkeyc -f monkey.jungle -o bin/recon.prg -y developer_key.der -d fr265 -r
 ```
+
+Check it in the simulator before it ever reaches the watch:
+
+```bash
+connectiq                       # start the simulator
+monkeydo bin/recon.prg fr265
+```
+
+## Installing on your own watch
+
+No store listing needed — a `.prg` copied over USB is the whole mechanism.
+
+1. Build for your exact device (above). A `.prg` is device-specific; one built
+   for another model is ignored by the watch.
+2. Connect the watch by USB. Windows shows it in Explorer; macOS cannot read
+   MTP in Finder, so use [OpenMTP](https://openmtp.ganeshrvel.com/) or Android
+   File Transfer.
+3. Copy the file to `GARMIN/APPS/recon.prg`.
+4. Eject, unplug, then pick **RECON** from the watch face list.
+
+If it does not appear: the build targeted a different device id, Connect IQ
+storage is full, or the face threw on first draw — the watch writes a log to
+`GARMIN/APPS/LOGS/`.
 
 ## Source layout
 
@@ -135,8 +170,9 @@ bitmaps, so the face carries no image assets and scales to every display size.
 Since no build has run, these are the assumptions most likely to be wrong.
 Check them in this order:
 
-1. `iq:products` in `manifest.xml` — trim to the devices your SDK Manager has
-   actually installed. An unknown id fails the build immediately.
+1. `iq:products` in `manifest.xml` is trimmed to `fr265` and `fr265s`. Building
+   for anything else means adding its id there first, and an id your SDK
+   Manager does not have installed fails the build immediately.
 2. The `Toybox.Weather.CONDITION_*` names in `Metrics.glyphFor`. The enum is
    large and a single wrong name is a compile error; delete any the compiler
    rejects, the `default` branch already covers them.
@@ -167,6 +203,8 @@ Check them in this order:
   itself are reviewed but unverified by a build. Expect to trim `iq:products` to
   the devices your SDK actually has installed, and to fix whatever the compiler
   flags on the first run.
+- `iq:products` covers only the Forerunner 265 family. Other round devices
+  should work as-is but have not been looked at.
 - Weekday initials default to Korean. English firmware falls back to
   `S M T W T F S` via `resources-eng/`, because Hangul glyph coverage in the
   system font depends on the device's language build.

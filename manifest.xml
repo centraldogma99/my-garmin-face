@@ -9,28 +9,11 @@
         minApiLevel="3.2.0">
 
         <!-- Round displays only: the layout is polar around the bezel.
-             Trim this list to the devices your SDK actually has installed. -->
+             Trimmed to the Forerunner 265 family; add more <iq:product> ids
+             here as you install their device packages in the SDK Manager. -->
         <iq:products>
-            <iq:product id="fenix7"/>
-            <iq:product id="fenix7pro"/>
-            <iq:product id="fenix7s"/>
-            <iq:product id="fenix7spro"/>
-            <iq:product id="fenix7x"/>
-            <iq:product id="fenix7xpro"/>
-            <iq:product id="fenix843mm"/>
-            <iq:product id="fenix847mm"/>
-            <iq:product id="epix2"/>
-            <iq:product id="epix2pro42mm"/>
-            <iq:product id="epix2pro47mm"/>
-            <iq:product id="epix2pro51mm"/>
-            <iq:product id="fr255"/>
-            <iq:product id="fr265"/>
-            <iq:product id="fr955"/>
-            <iq:product id="fr965"/>
-            <iq:product id="venu2"/>
-            <iq:product id="venu2plus"/>
-            <iq:product id="venu3"/>
-            <iq:product id="vivoactive5"/>
+            <iq:product id="fr265"/>   <!-- 416 x 416 -->
+            <iq:product id="fr265s"/>  <!-- 360 x 360 -->
         </iq:products>
 
         <iq:permissions>

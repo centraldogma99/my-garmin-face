@@ -7,8 +7,9 @@
   "scripts": {
     "postinstall": "node setup-fonts.mjs",
     "fonts": "node setup-fonts.mjs",
-    "render": "node render.mjs",
-    "serve": "http-server -p 4321 -c-1 ."
+    "render": "node render.mjs 416 && node render.mjs 454",
+    "serve": "http-server -p 4321 -c-1 .",
+    "stress": "node font-stress.mjs 416 1.0 1.15 1.3"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "^5.2.5"
