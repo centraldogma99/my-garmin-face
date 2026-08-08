@@ -54,60 +54,60 @@
     /* weekday bezel arc */
     wdR: 202,
     wdStep: 12.5, // degrees between labels
-    wdFont: 18,
+    wdFont: 23,
     wdBarPad: 1.0,   // highlight length as a multiple of the glyph width
     wdBarGap: 4.3,   // clearance between the glyph box and the highlight
     wdBarH: 3,
 
     /* date | weather strip */
     stripCy: 104,
-    stripDivTop: 91,
-    stripDivBot: 117,
+    stripDivTop: 87,
+    stripDivBot: 121,
     dateRight: 209,
-    stripFont: 25,
-    wxCx: 248,
-    wxSize: 22,
-    tempLeft: 267,
+    stripFont: 33,
+    wxCx: 252,
+    wxSize: 29,
+    tempLeft: 275,
 
     /* hero time */
     timeCy: 178,
-    timeFont: 103,
+    timeFont: 123,
     colonHalfGap: 17,
     colonSq: 8,
     colonDy: 22,
     colonShift: -3,
 
     /* HR | STEPS row */
-    rowDivTop: 238,
-    rowDivBot: 306,
+    rowDivTop: 236,
+    rowDivBot: 324,
     cellL: 146,
     cellR: 308,
-    labelCy: 246,
-    labelFont: 19,
-    valueCy: 274,
+    labelCy: 253,
+    labelFont: 25,
+    valueCy: 295,
     valueFont: 37,
     cellMaxW: 132,
-    barY: 300,
+    barY: 319,
     barH: 5,
     barW: 78,
     segGap: 4,
 
     /* body battery band */
-    bbLabelCy: 330,
-    bbLabelFont: 18,
-    bbValueFont: 24,
+    bbLabelCy: 347,
+    bbLabelFont: 23,
+    bbValueFont: 31,
     bbX0: 102,
     bbX1: 352,
-    bbY0: 350,
-    bbY1: 382,
+    bbY0: 367,
+    bbY1: 396,
     bbBar: 3.4,
     bbSlot: 5,
     bbCap: 3,
 
     /* device battery */
-    batCy: 404,
-    batFont: 20,
-    iconBox: 26,
+    batCy: 415,
+    batFont: 26,
+    iconBox: 34,
     batIconW: 21,
     batIconH: 10.5,
     batArcR: 213,
@@ -120,7 +120,7 @@
     aodBatCy: 312,
   };
 
-  var VALUE_SIZES = [37, 33, 29, 25];
+  var VALUE_SIZES = [48, 43, 38, 33];
 
   var WEEKDAYS = {
     ko: ['일', '월', '화', '수', '목', '금', '토'],

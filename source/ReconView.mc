@@ -14,9 +14,10 @@ import Toybox.WatchUi;
 class ReconView extends WatchUi.WatchFace {
 
     // The clock keeps a system number font: those digits are tabular, so the
-    // face does not twitch as the minutes tick over. FONT_NUMBER_MEDIUM is the
-    // rung nearest Layout's 103em design size on the current devices.
-    private const TIME_FONT = Graphics.FONT_NUMBER_MEDIUM;
+    // face does not twitch as the minutes tick over. That ladder is a fixed set
+    // of rungs, so the clock cannot follow the 1.3x the rest of the type took —
+    // FONT_NUMBER_HOT is the next one up, and lands at 1.2x.
+    private const TIME_FONT = Graphics.FONT_NUMBER_HOT;
 
     // Hangul first: the default weekday strings are Korean, and a Latin-only
     // face would draw them blank.
@@ -110,8 +111,6 @@ class ReconView extends WatchUi.WatchFace {
         dc.setPenWidth(1);
     }
 
-    //! Every design size is an em height on Layout's grid, so a vector font can
-    //! hit it exactly. Devices without one keep the coarse bitmap ladder.
     //! Bitmaps are drawn from their top-left corner; the cells are centred.
     private function icon(
         dc as Graphics.Dc, bmp as WatchUi.BitmapResource, cx as Number, cy as Number
@@ -119,6 +118,8 @@ class ReconView extends WatchUi.WatchFace {
         dc.drawBitmap(cx - bmp.getWidth() / 2, cy - bmp.getHeight() / 2, bmp);
     }
 
+    //! Every design size is an em height on Layout's grid, so a vector font can
+    //! hit it exactly. Devices without one keep the coarse bitmap ladder.
     private function resolveFonts() as Void {
         var face = firstFace();
         if (face == null) { return; }

@@ -38,13 +38,16 @@ module Layout {
     // bitmap fonts are a fixed per-device ladder that does not scale with the
     // grid, so everything but the clock is drawn with a vector font at exactly
     // these sizes. Get these wrong and the rows collide.
-    const WD_EM = 18;
-    const STRIP_EM = 25;
-    const LABEL_EM = 19;
-    const BB_LABEL_EM = 18;
-    const BB_VALUE_EM = 24;
-    const BAT_EM = 20;
-    const VALUE_EMS = [37, 33, 29, 25];
+    // Scaled 1.3x from the authored sizes; the row anchors below were re-fitted
+    // to the measured clearances rather than scaled with them, because the
+    // screen did not get bigger.
+    const WD_EM = 23;
+    const STRIP_EM = 33;
+    const LABEL_EM = 25;
+    const BB_VALUE_EM = 31;
+    const BAT_EM = 26;
+    const VALUE_EMS = [48, 43, 38, 33];
+    const ICON_PX = 31;      // stat-cell bitmaps, rasterised at this pixel size
 
     // ---- bezel ------------------------------------------------------------
     const RING_R = 218;
@@ -68,12 +71,12 @@ module Layout {
 
     // ---- date | weather strip --------------------------------------------
     const STRIP_CY = 104;
-    const STRIP_DIV_TOP = 91;
-    const STRIP_DIV_H = 26;
+    const STRIP_DIV_TOP = 87;
+    const STRIP_DIV_H = 34;
     const DATE_RIGHT = 209;
-    const WX_CX = 248;
-    const WX_SIZE = 22;
-    const TEMP_LEFT = 267;
+    const WX_CX = 252;
+    const WX_SIZE = 29;
+    const TEMP_LEFT = 275;
 
     // ---- hero time --------------------------------------------------------
     const TIME_CY = 178;
@@ -83,30 +86,30 @@ module Layout {
     const COLON_SHIFT = -3;
 
     // ---- HR | STEPS row ---------------------------------------------------
-    const ROW_DIV_TOP = 238;
-    const ROW_DIV_BOT = 306;
+    const ROW_DIV_TOP = 236;
+    const ROW_DIV_BOT = 324;
     const CELL_L = 146;
     const CELL_R = 308;
     const CELL_MAX_W = 132;
-    const LABEL_CY = 246;
-    const VALUE_CY = 274;
-    const BAR_Y = 300;
+    const LABEL_CY = 253;
+    const VALUE_CY = 295;
+    const BAR_Y = 319;
     const BAR_H = 5;
     const BAR_W = 78;
     const SEG_GAP = 4;
 
     // ---- body battery band ------------------------------------------------
-    const BB_LABEL_CY = 330;
+    const BB_LABEL_CY = 347;
     const BB_X0 = 102;
     const BB_X1 = 352;
-    const BB_Y0 = 350;
-    const BB_Y1 = 382;
+    const BB_Y0 = 367;
+    const BB_Y1 = 396;
     const BB_BAR = 3.4;
     const BB_SLOT = 5.0;
     const BB_CAP = 3;
 
     // ---- device battery ---------------------------------------------------
-    const BAT_CY = 404;
+    const BAT_CY = 415;
     const BAT_ICON_W = 21;
     const BAT_ICON_H = 11;
     const BAT_ARC_R = 213;
