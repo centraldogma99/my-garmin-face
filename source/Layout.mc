@@ -70,8 +70,8 @@ module Layout {
     const WD_BAR_H = 3;
 
     // ---- date | weather strip --------------------------------------------
-    const STRIP_CY = 104;
-    const STRIP_DIV_TOP = 87;
+    const STRIP_CY = 91;
+    const STRIP_DIV_TOP = 74;
     const STRIP_DIV_H = 34;
     const DATE_RIGHT = 209;
     const WX_CX = 252;
@@ -79,37 +79,37 @@ module Layout {
     const TEMP_LEFT = 275;
 
     // ---- hero time --------------------------------------------------------
-    const TIME_CY = 178;
+    const TIME_CY = 165;
     const COLON_GAP = 17;   // half-gap between the digits and the colon
     const COLON_SQ = 8;
     const COLON_DY = 22;
     const COLON_SHIFT = -3;
 
     // ---- HR | STEPS row ---------------------------------------------------
-    const ROW_DIV_TOP = 236;
-    const ROW_DIV_BOT = 324;
+    const ROW_DIV_TOP = 223;
+    const ROW_DIV_BOT = 311;
     const CELL_L = 146;
     const CELL_R = 308;
     const CELL_MAX_W = 132;
-    const LABEL_CY = 253;
-    const VALUE_CY = 295;
-    const BAR_Y = 319;
+    const LABEL_CY = 240;
+    const VALUE_CY = 282;
+    const BAR_Y = 306;
     const BAR_H = 5;
     const BAR_W = 78;
     const SEG_GAP = 4;
 
     // ---- body battery band ------------------------------------------------
-    const BB_LABEL_CY = 347;
+    const BB_LABEL_CY = 334;
     const BB_X0 = 102;
     const BB_X1 = 352;
-    const BB_Y0 = 367;
-    const BB_Y1 = 396;
+    const BB_Y0 = 354;
+    const BB_Y1 = 383;
     const BB_BAR = 3.4;
     const BB_SLOT = 5.0;
     const BB_CAP = 3;
 
     // ---- device battery ---------------------------------------------------
-    const BAT_CY = 415;
+    const BAT_CY = 402;
     const BAT_ICON_W = 21;
     const BAT_ICON_H = 11;
     const BAT_ARC_R = 213;

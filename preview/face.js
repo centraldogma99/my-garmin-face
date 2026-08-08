@@ -60,9 +60,9 @@
     wdBarH: 3,
 
     /* date | weather strip */
-    stripCy: 104,
-    stripDivTop: 87,
-    stripDivBot: 121,
+    stripCy: 91,
+    stripDivTop: 74,
+    stripDivBot: 108,
     dateRight: 209,
     stripFont: 33,
     wxCx: 252,
@@ -70,7 +70,7 @@
     tempLeft: 275,
 
     /* hero time */
-    timeCy: 178,
+    timeCy: 165,
     timeFont: 123,
     colonHalfGap: 17,
     colonSq: 8,
@@ -78,34 +78,34 @@
     colonShift: -3,
 
     /* HR | STEPS row */
-    rowDivTop: 236,
-    rowDivBot: 324,
+    rowDivTop: 223,
+    rowDivBot: 311,
     cellL: 146,
     cellR: 308,
-    labelCy: 253,
+    labelCy: 240,
     labelFont: 25,
-    valueCy: 295,
+    valueCy: 282,
     valueFont: 37,
     cellMaxW: 132,
-    barY: 319,
+    barY: 306,
     barH: 5,
     barW: 78,
     segGap: 4,
 
     /* body battery band */
-    bbLabelCy: 347,
+    bbLabelCy: 334,
     bbLabelFont: 23,
     bbValueFont: 31,
     bbX0: 102,
     bbX1: 352,
-    bbY0: 367,
-    bbY1: 396,
+    bbY0: 354,
+    bbY1: 383,
     bbBar: 3.4,
     bbSlot: 5,
     bbCap: 3,
 
     /* device battery */
-    batCy: 415,
+    batCy: 402,
     batFont: 26,
     iconBox: 34,
     batIconW: 21,
