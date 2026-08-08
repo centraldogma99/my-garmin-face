@@ -13,14 +13,29 @@ import Toybox.WatchUi;
 //! placeholder for when its sensor has nothing to say.
 class ReconView extends WatchUi.WatchFace {
 
-    private const TIME_FONT = Graphics.FONT_NUMBER_THAI_HOT;
-    private const STRIP_FONT = Graphics.FONT_TINY;
-    private const LABEL_FONT = Graphics.FONT_XTINY;
-    private const WD_FONT = Graphics.FONT_XTINY;
-    private const BB_VALUE_FONT = Graphics.FONT_TINY;
-    private const BAT_FONT = Graphics.FONT_XTINY;
+    // The clock keeps a system number font: those digits are tabular, so the
+    // face does not twitch as the minutes tick over. FONT_NUMBER_MEDIUM is the
+    // rung nearest Layout's 103em design size on the current devices.
+    private const TIME_FONT = Graphics.FONT_NUMBER_MEDIUM;
 
-    private var _valueFonts as Array<Graphics.FontType>;
+    // Hangul first: the default weekday strings are Korean, and a Latin-only
+    // face would draw them blank.
+    private const FACES = [
+        "NanumGothicRegular", "NanumGothicBold", "RobotoCondensedRegular", "RobotoRegular"
+    ] as Array<String>;
+
+    // Fallback ladder for a device with no vector fonts. Coarser than the
+    // design asks for, but it never leaves the screen blank.
+    private const SYS_FALLBACK = Graphics.FONT_XTINY;
+
+    private var _stripFont as Graphics.FontType or Graphics.VectorFont = SYS_FALLBACK;
+    private var _labelFont as Graphics.FontType or Graphics.VectorFont = SYS_FALLBACK;
+    private var _wdFont as Graphics.FontType or Graphics.VectorFont = SYS_FALLBACK;
+    private var _bbValueFont as Graphics.FontType or Graphics.VectorFont = SYS_FALLBACK;
+    private var _batFont as Graphics.FontType or Graphics.VectorFont = SYS_FALLBACK;
+    private var _valueFonts as Array<Graphics.FontType or Graphics.VectorFont>;
+    private var _iconHr as WatchUi.BitmapResource;
+    private var _iconSteps as WatchUi.BitmapResource;
     private var _metrics as Metrics;
     private var _weekdays as Array<String>;
     private var _lowPower as Boolean = false;
@@ -30,11 +45,12 @@ class ReconView extends WatchUi.WatchFace {
         WatchFace.initialize();
         _metrics = new Metrics();
         _valueFonts = [
-            Graphics.FONT_NUMBER_MILD,
-            Graphics.FONT_MEDIUM,
             Graphics.FONT_SMALL,
-            Graphics.FONT_TINY
-        ] as Array<Graphics.FontType>;
+            Graphics.FONT_TINY,
+            Graphics.FONT_XTINY
+        ] as Array<Graphics.FontType or Graphics.VectorFont>;
+        _iconHr = WatchUi.loadResource(Rez.Drawables.IconHr) as WatchUi.BitmapResource;
+        _iconSteps = WatchUi.loadResource(Rez.Drawables.IconSteps) as WatchUi.BitmapResource;
         _weekdays = [
             WatchUi.loadResource(Rez.Strings.Wd0) as String,
             WatchUi.loadResource(Rez.Strings.Wd1) as String,
@@ -49,6 +65,7 @@ class ReconView extends WatchUi.WatchFace {
     function onUpdate(dc as Graphics.Dc) as Void {
         if (!_ready) {
             Layout.init(dc);
+            resolveFonts();
             _ready = true;
         }
         if (dc has :setAntiAlias) {
@@ -93,9 +110,51 @@ class ReconView extends WatchUi.WatchFace {
         dc.setPenWidth(1);
     }
 
+    //! Every design size is an em height on Layout's grid, so a vector font can
+    //! hit it exactly. Devices without one keep the coarse bitmap ladder.
+    //! Bitmaps are drawn from their top-left corner; the cells are centred.
+    private function icon(
+        dc as Graphics.Dc, bmp as WatchUi.BitmapResource, cx as Number, cy as Number
+    ) as Void {
+        dc.drawBitmap(cx - bmp.getWidth() / 2, cy - bmp.getHeight() / 2, bmp);
+    }
+
+    private function resolveFonts() as Void {
+        var face = firstFace();
+        if (face == null) { return; }
+
+        _stripFont = vec(face, Layout.STRIP_EM);
+        _labelFont = vec(face, Layout.LABEL_EM);
+        _wdFont = vec(face, Layout.WD_EM);
+        _bbValueFont = vec(face, Layout.BB_VALUE_EM);
+        _batFont = vec(face, Layout.BAT_EM);
+
+        var ems = Layout.VALUE_EMS;
+        var fonts = new [ems.size()] as Array<Graphics.FontType or Graphics.VectorFont>;
+        for (var i = 0; i < ems.size(); i++) {
+            fonts[i] = vec(face, ems[i]);
+        }
+        _valueFonts = fonts;
+    }
+
+    private function vec(face as String, em as Number) as Graphics.VectorFont {
+        return Graphics.getVectorFont({:face => face, :size => Layout.u(em)}) as Graphics.VectorFont;
+    }
+
+    private function firstFace() as String? {
+        if (!(Graphics has :getVectorFont)) { return null; }
+        for (var i = 0; i < FACES.size(); i++) {
+            if (Graphics.getVectorFont({:face => FACES[i], :size => 16}) != null) { return FACES[i]; }
+        }
+        return null;
+    }
+
     private function drawWeekdays(dc as Graphics.Dc, dim as Boolean) as Void {
         var r = Layout.f(Layout.WD_R);
-        var half = Layout.WD_BAR_SPAN / 2.0;
+        // The glyphs are rotated to stand on their radius, so what the highlight
+        // has to clear radially is the em box height, not the glyph width.
+        var barR = Layout.u(Layout.WD_R)
+            - dc.getFontHeight(_wdFont) / 2 - Layout.u(Layout.WD_BAR_GAP);
 
         // Every glyph is rotated to stand on its own radius, so the row reads
         // as a fan struck from the centre rather than as text on an arch. The
@@ -115,13 +174,17 @@ class ReconView extends WatchUi.WatchFace {
                 color = dim ? Theme.AOD_LOW : Theme.TEXT_LOW;
             }
 
-            Gfx.angledText(dc, x, y, WD_FONT, _weekdays[i],
+            Gfx.angledText(dc, x, y, _wdFont, _weekdays[i],
                 Graphics.TEXT_JUSTIFY_CENTER, color, deg);
 
             if (on) {
+                // Length tracks the glyph the highlight marks — see WD_BAR_PAD.
+                var w = dc.getTextWidthInPixels(_weekdays[i], _wdFont);
+                var half = (w * Layout.WD_BAR_PAD * 90.0) / (Math.PI * barR);
+
                 dc.setPenWidth(Layout.u(Layout.WD_BAR_H));
                 Gfx.fill(dc, color);
-                Gfx.arcScreen(dc, Layout.cx, Layout.cy, Layout.u(Layout.WD_BAR_R),
+                Gfx.arcScreen(dc, Layout.cx, Layout.cy, barR,
                     -90.0 + deg - half, -90.0 + deg + half);
                 dc.setPenWidth(1);
             }
@@ -142,14 +205,14 @@ class ReconView extends WatchUi.WatchFace {
             dim ? Theme.AOD_HAIR : Theme.HAIR);
 
         var date = _metrics.month.format("%02d") + "." + _metrics.day.format("%02d");
-        Gfx.text(dc, Layout.u(Layout.DATE_RIGHT), y, STRIP_FONT, date,
+        Gfx.text(dc, Layout.u(Layout.DATE_RIGHT), y, _stripFont, date,
             Graphics.TEXT_JUSTIFY_RIGHT, hi);
 
         Gfx.weather(dc, _metrics.wxKind, Layout.u(Layout.WX_CX), y,
             Layout.u(Layout.WX_SIZE), hi, mid);
 
         var temp = (_metrics.wxTemp == null) ? "--°" : _metrics.wxTemp.format("%d") + "°";
-        Gfx.text(dc, Layout.u(Layout.TEMP_LEFT), y, STRIP_FONT, temp,
+        Gfx.text(dc, Layout.u(Layout.TEMP_LEFT), y, _stripFont, temp,
             Graphics.TEXT_JUSTIFY_LEFT, hi);
     }
 
@@ -178,7 +241,6 @@ class ReconView extends WatchUi.WatchFace {
         var barW = Layout.u(Layout.BAR_W);
         var barH = Layout.u(Layout.BAR_H);
         var maxW = Layout.u(Layout.CELL_MAX_W);
-        var tracking = Layout.u(Layout.TRACK_LABEL);
 
         Gfx.box(dc, Layout.cx, Layout.u(Layout.ROW_DIV_TOP), 1,
             Layout.u(Layout.ROW_DIV_BOT - Layout.ROW_DIV_TOP), Theme.HAIR);
@@ -187,8 +249,7 @@ class ReconView extends WatchUi.WatchFace {
         var cellL = Layout.u(Layout.CELL_L);
         var hrTxt = (_metrics.hr == null) ? "--" : _metrics.hr.format("%d");
 
-        Gfx.trackedText(dc, cellL, labelY, LABEL_FONT, "HR", tracking,
-            Graphics.TEXT_JUSTIFY_CENTER, Theme.TEXT_LOW);
+        icon(dc, _iconHr, cellL, labelY);
         Gfx.text(dc, cellL, valueY, Gfx.fitFont(dc, hrTxt, maxW, _valueFonts), hrTxt,
             Graphics.TEXT_JUSTIFY_CENTER, Theme.TEXT_VAL);
 
@@ -210,8 +271,7 @@ class ReconView extends WatchUi.WatchFace {
         var cellR = Layout.u(Layout.CELL_R);
         var stepTxt = grouped(_metrics.steps);
 
-        Gfx.trackedText(dc, cellR, labelY, LABEL_FONT, "STEPS", tracking,
-            Graphics.TEXT_JUSTIFY_CENTER, Theme.TEXT_LOW);
+        icon(dc, _iconSteps, cellR, labelY);
         Gfx.text(dc, cellR, valueY, Gfx.fitFont(dc, stepTxt, maxW, _valueFonts), stepTxt,
             Graphics.TEXT_JUSTIFY_CENTER, Theme.TEXT_VAL);
 
@@ -235,20 +295,20 @@ class ReconView extends WatchUi.WatchFace {
         var tracking = Layout.u(Layout.TRACK_LABEL);
 
         var value = (_metrics.bodyBattery == null) ? "--" : _metrics.bodyBattery.format("%d");
-        var valueLeft = x1 - dc.getTextWidthInPixels(value, BB_VALUE_FONT);
+        var valueLeft = x1 - dc.getTextWidthInPixels(value, _bbValueFont);
 
-        Gfx.trackedText(dc, x0, labelY, LABEL_FONT, "BODY BATTERY", tracking,
+        Gfx.trackedText(dc, x0, labelY, _labelFont, "BODY BATTERY", tracking,
             Graphics.TEXT_JUSTIFY_LEFT, Theme.TEXT_LOW);
-        Gfx.text(dc, x1, labelY, BB_VALUE_FONT, value,
+        Gfx.text(dc, x1, labelY, _bbValueFont, value,
             Graphics.TEXT_JUSTIFY_RIGHT, Theme.BB);
 
         // The window tag is the first thing to drop when a three-digit body
         // battery needs the room.
-        var labelW = dc.getTextWidthInPixels("BODY BATTERY", LABEL_FONT) + tracking * 11;
-        var tagW = dc.getTextWidthInPixels("12H", LABEL_FONT) + tracking * 2;
+        var labelW = dc.getTextWidthInPixels("BODY BATTERY", _labelFont) + tracking * 11;
+        var tagW = dc.getTextWidthInPixels("12H", _labelFont) + tracking * 2;
         var tagX = x0 + labelW + Layout.u(9);
         if (tagX + tagW <= valueLeft - Layout.u(10)) {
-            Gfx.trackedText(dc, tagX, labelY, LABEL_FONT, "12H", tracking,
+            Gfx.trackedText(dc, tagX, labelY, _labelFont, "12H", tracking,
                 Graphics.TEXT_JUSTIFY_LEFT, Theme.TEXT_FAINT);
         }
 
@@ -300,7 +360,7 @@ class ReconView extends WatchUi.WatchFace {
         }
 
         var label = Math.round(pct).toNumber().format("%d") + "%";
-        var tw = dc.getTextWidthInPixels(label, BAT_FONT);
+        var tw = dc.getTextWidthInPixels(label, _batFont);
         var iw = Layout.u(Layout.BAT_ICON_W);
         var ih = Layout.u(Layout.BAT_ICON_H);
         var pad = Layout.u(8);
@@ -315,7 +375,7 @@ class ReconView extends WatchUi.WatchFace {
         Gfx.box(dc, ix + Layout.u(3), iy + Layout.u(3),
             ((iw - Layout.u(6)) * pct / 100.0).toNumber(), ih - Layout.u(6), col);
 
-        Gfx.text(dc, ix + iw + pad, cy, BAT_FONT, label,
+        Gfx.text(dc, ix + iw + pad, cy, _batFont, label,
             Graphics.TEXT_JUSTIFY_LEFT, col);
     }
 

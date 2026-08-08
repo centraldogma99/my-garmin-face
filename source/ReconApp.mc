@@ -8,8 +8,8 @@ class ReconApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    function getInitialView() as Array<Views or InputDelegates> {
-        return [new ReconView()] as Array<Views or InputDelegates>;
+    function getInitialView() as [Views] or [Views, InputDelegates] {
+        return [new ReconView()];
     }
 
     function onSettingsChanged() as Void {

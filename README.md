@@ -223,3 +223,16 @@ Check them in this order:
   `Layout.AOD_*` plus the three AOD anchors read in `drawStrip`, `drawTime` and
   `drawBattery` — shifting those by a couple of pixels per minute is the whole
   change. It was left out rather than shipped untested.
+
+## Third-party assets
+
+The heart-rate and steps icons in `resources/drawables/` are
+[Material Symbols](https://github.com/google/material-design-icons)
+(`favorite`, `directions_walk`, filled), licensed Apache-2.0. They are
+rasterised at their native 24px design grid with `Theme.TEXT_LOW` on
+`Theme.BG` baked in, because Connect IQ cannot tint a bitmap at draw time.
+
+That makes them the one part of the face that does not scale with the design
+grid: a device other than the Forerunner 265 family would get a 24px icon
+regardless of its screen. Add a device-qualified `resourcePath` in
+`monkey.jungle` and a second rasterisation if that ever matters.

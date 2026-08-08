@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.png" />
+
+    <!-- Material Symbols (Apache-2.0), rasterised at their 24px design grid
+         with Theme.TEXT_LOW on Theme.BG baked in: Connect IQ cannot tint a
+         bitmap at draw time, and the stat row never draws over anything but
+         the background. Hand-drawn primitives at this size came out mushy. -->
+    <bitmap id="IconHr" filename="icon_hr.png" />
+    <bitmap id="IconSteps" filename="icon_steps.png" />
 </drawables>

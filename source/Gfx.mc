@@ -24,7 +24,12 @@ module Gfx {
     ) as Void {
         if ((toDeg - fromDeg).abs() < 0.01) { return; }
         var attr = (toDeg > fromDeg) ? Graphics.ARC_CLOCKWISE : Graphics.ARC_COUNTER_CLOCKWISE;
-        dc.drawArc(x, y, r, attr, norm(360.0 - fromDeg).toNumber(), norm(360.0 - toDeg).toNumber());
+        // drawArc takes whole degrees. Rounding rather than truncating matters
+        // on the short weekday highlight, where a consistent half-degree of
+        // truncation walks the arc off the glyph it marks.
+        dc.drawArc(x, y, r, attr,
+            Math.round(norm(360.0 - fromDeg)).toNumber(),
+            Math.round(norm(360.0 - toDeg)).toNumber());
     }
 
     function fill(dc as Graphics.Dc, color as Number) as Void {
@@ -42,7 +47,8 @@ module Gfx {
         dc as Graphics.Dc, x as Numeric, y as Numeric, r as Numeric, color as Number
     ) as Void {
         fill(dc, color);
-        dc.fillCircle(x.toNumber(), y.toNumber(), r.toNumber());
+        dc.fillCircle(Math.round(x).toNumber(), Math.round(y).toNumber(),
+            Math.round(r).toNumber());
     }
 
     function stroke(
@@ -50,7 +56,8 @@ module Gfx {
         w as Numeric, color as Number
     ) as Void {
         fill(dc, color);
-        dc.setPenWidth(w.toNumber() < 1 ? 1 : w.toNumber());
+        var pw = Math.round(w).toNumber();
+        dc.setPenWidth(pw < 1 ? 1 : pw);
         dc.drawLine(x0.toNumber(), y0.toNumber(), x1.toNumber(), y1.toNumber());
         dc.setPenWidth(1);
     }
@@ -59,7 +66,8 @@ module Gfx {
     //! tracked strings are laid out one glyph at a time. Watch faces redraw
     //! once a minute, so the extra measuring is free.
     function trackedText(
-        dc as Graphics.Dc, x as Number, y as Number, font as Graphics.FontType,
+        dc as Graphics.Dc, x as Number, y as Number,
+        font as Graphics.FontType or Graphics.VectorFont,
         str as String, tracking as Number, justify as Number, color as Number
     ) as Void {
         var n = str.length();
@@ -90,7 +98,8 @@ module Gfx {
     }
 
     function text(
-        dc as Graphics.Dc, x as Number, y as Number, font as Graphics.FontType,
+        dc as Graphics.Dc, x as Number, y as Number,
+        font as Graphics.FontType or Graphics.VectorFont,
         str as String, justify as Number, color as Number
     ) as Void {
         fill(dc, color);
@@ -102,13 +111,32 @@ module Gfx {
     //! hence the negation. Falls back to upright text where the device has no
     //! drawAngledText.
     function angledText(
-        dc as Graphics.Dc, x as Number, y as Number, font as Graphics.FontType,
+        dc as Graphics.Dc, x as Number, y as Number,
+        font as Graphics.FontType or Graphics.VectorFont,
         str as String, justify as Number, color as Number, screenDeg as Float
     ) as Void {
         fill(dc, color);
         var j = justify | Graphics.TEXT_JUSTIFY_VCENTER;
-        if (dc has :drawAngledText) {
-            dc.drawAngledText(x, y, font, str, j, norm(-screenDeg).toNumber());
+        // drawAngledText only accepts a vector font; a bitmap font id crashes it.
+        if ((dc has :drawAngledText) && font instanceof Graphics.VectorFont) {
+            // Its own horizontal justification rounds in the rotated frame, which
+            // walks the glyph up to 1.5px off the point it was asked to centre on
+            // — enough to visibly miss the weekday highlight. Anchor at the start
+            // of the baseline instead and step back along it ourselves.
+            var back = 0.0;
+            if (justify == Graphics.TEXT_JUSTIFY_CENTER) {
+                back = dc.getTextWidthInPixels(str, font) / 2.0;
+            } else if (justify != Graphics.TEXT_JUSTIFY_LEFT) {
+                back = dc.getTextWidthInPixels(str, font).toFloat();
+            }
+            var deg = norm(-screenDeg);
+            var rad = deg * DEG;
+            dc.drawAngledText(
+                Math.round(x - Math.cos(rad) * back).toNumber(),
+                Math.round(y + Math.sin(rad) * back).toNumber(),
+                font, str,
+                Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER,
+                deg.toNumber());
         } else {
             dc.drawText(x, y, font, str, j);
         }
@@ -116,8 +144,9 @@ module Gfx {
 
     //! First font in `fonts` whose rendering of `str` fits inside `maxW`.
     function fitFont(
-        dc as Graphics.Dc, str as String, maxW as Number, fonts as Array<Graphics.FontType>
-    ) as Graphics.FontType {
+        dc as Graphics.Dc, str as String, maxW as Number,
+        fonts as Array<Graphics.FontType or Graphics.VectorFont>
+    ) as Graphics.FontType or Graphics.VectorFont {
         for (var i = 0; i < fonts.size(); i++) {
             if (dc.getTextWidthInPixels(str, fonts[i]) <= maxW) { return fonts[i]; }
         }
@@ -168,7 +197,7 @@ module Gfx {
             [(x - 2.0 * k).toNumber(), (y + 12.0 * k).toNumber()],
             [(x + 4.5 * k).toNumber(), (y + 4.5 * k).toNumber()],
             [(x + 0.8 * k).toNumber(), (y + 4.5 * k).toNumber()]
-        ] as Array<Array<Number>>);
+        ]);
     }
 
     //! `kind` comes from Metrics.WX_*

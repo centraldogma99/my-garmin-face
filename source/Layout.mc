@@ -33,6 +33,19 @@ module Layout {
         return v * scale;
     }
 
+    // ---- type sizes -------------------------------------------------------
+    // Em heights on the design grid, mirrored from `preview/face.js`. Garmin's
+    // bitmap fonts are a fixed per-device ladder that does not scale with the
+    // grid, so everything but the clock is drawn with a vector font at exactly
+    // these sizes. Get these wrong and the rows collide.
+    const WD_EM = 18;
+    const STRIP_EM = 25;
+    const LABEL_EM = 19;
+    const BB_LABEL_EM = 18;
+    const BB_VALUE_EM = 24;
+    const BAT_EM = 20;
+    const VALUE_EMS = [37, 33, 29, 25];
+
     // ---- bezel ------------------------------------------------------------
     const RING_R = 218;
     const RING_W = 2;
@@ -40,8 +53,17 @@ module Layout {
     // ---- weekday arc ------------------------------------------------------
     const WD_R = 202;
     const WD_STEP = 12.5;    // degrees between labels
-    const WD_BAR_R = 189;    // highlight arc, just inboard of the glyphs
-    const WD_BAR_SPAN = 7.8; // degrees of arc the highlight covers
+    // The highlight is sized and placed off the glyph it marks rather than
+    // pinned to a radius: Hangul fills its em box, Latin fills about half of
+    // it, and one fixed arc ends up either strangling the wide script or
+    // floating away from the narrow one.
+    //
+    // PAD is 1.0 — the underline is exactly as wide as the glyph. Drawing it
+    // wider (the authored look was 1.4x) makes the sub-pixel rounding in
+    // drawAngledText read as a centring error, because the overhang lands
+    // almost entirely on one side of a 7px letter.
+    const WD_BAR_PAD = 1.0;  // highlight length as a multiple of the glyph width
+    const WD_BAR_GAP = 4.3;  // clearance between the glyph box and the highlight
     const WD_BAR_H = 3;
 
     // ---- date | weather strip --------------------------------------------

@@ -55,8 +55,8 @@
     wdR: 202,
     wdStep: 12.5, // degrees between labels
     wdFont: 18,
-    wdBarR: 189,     // highlight arc, just inboard of the glyphs
-    wdBarSpan: 7.8,  // degrees of arc the highlight covers
+    wdBarPad: 1.0,   // highlight length as a multiple of the glyph width
+    wdBarGap: 4.3,   // clearance between the glyph box and the highlight
     wdBarH: 3,
 
     /* date | weather strip */
@@ -107,6 +107,7 @@
     /* device battery */
     batCy: 404,
     batFont: 20,
+    iconBox: 26,
     batIconW: 21,
     batIconH: 10.5,
     batArcR: 213,
@@ -266,6 +267,25 @@
     }
   }
 
+  /* Stat-cell icons: Material Symbols (Apache-2.0), the same artwork the
+     device build ships as PNG. Authored on a 960-unit grid with the origin at
+     the baseline, hence the translate. */
+  var ICON_PATHS = {
+    heart: 'm480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z',
+    walk: 'm280-40 112-564-72 28v136h-80v-188l202-86q14-6 29.5-7t29.5 4q14 5 26.5 14t20.5 23l40 64q26 42 70.5 69T760-520v80q-70 0-125-29t-94-74l-25 123 84 80v300h-80v-260l-84-64-72 324h-84Zm260-700q-33 0-56.5-23.5T460-820q0-33 23.5-56.5T540-900q33 0 56.5 23.5T620-820q0 33-23.5 56.5T540-740Z',
+  };
+
+  function icon(ctx, name, x, y, size, color) {
+    var s = size / 960;
+    ctx.save();
+    ctx.translate(x - size / 2, y - size / 2);
+    ctx.scale(s, s);
+    ctx.translate(0, 960);
+    ctx.fillStyle = color;
+    ctx.fill(new Path2D(ICON_PATHS[name]));
+    ctx.restore();
+  }
+
   function drizzle(ctx, x, y, k, color, count) {
     for (var i = 0; i < count; i++) {
       var ox = x + (i - (count - 1) / 2) * 5.5 * k;
@@ -382,9 +402,13 @@
       ctx.restore();
 
       if (on) {
-        var half = L.wdBarSpan / 2;
-        arc(ctx, cx, cy, g(L.wdBarR),
-            -90 + deg - half, -90 + deg + half, g(L.wdBarH), color);
+        /* The highlight is measured off the glyph it marks. Hangul fills its em
+           box, Latin fills about half of it, and one fixed arc span looks pasted
+           on under whichever is narrower. */
+        var w = measure(ctx, labels[i], gf(g, L.wdFont), 500, 0);
+        var barR = g(L.wdR) - gf(g, L.wdFont) / 2 - g(L.wdBarGap);
+        var half = (w * L.wdBarPad * 90) / (Math.PI * barR);
+        arc(ctx, cx, cy, barR, -90 + deg - half, -90 + deg + half, g(L.wdBarH), color);
       }
     }
   }
@@ -461,12 +485,7 @@
     var z = hrZone(data.hr, data.hrZones);
     var hrTxt = data.hr == null ? '--' : String(data.hr);
 
-    text(ctx, 'HR', g(L.cellL), g(L.labelCy), {
-      size: gf(g, L.labelFont),
-      weight: 600,
-      color: C.textLow,
-      tracking: g(1.6),
-    });
+    icon(ctx, 'heart', g(L.cellL), g(L.labelCy), gf(g, L.iconBox), C.textLow);
     text(ctx, hrTxt, g(L.cellL), g(L.valueCy), {
       size: fitSize(ctx, hrTxt, g(L.cellMaxW), VALUE_SIZES.map(function (v) { return gf(g, v); }), 700, g(-0.5)),
       weight: 700,
@@ -494,12 +513,7 @@
     }
 
     /* ---- steps ---- */
-    text(ctx, 'STEPS', g(L.cellR), g(L.labelCy), {
-      size: gf(g, L.labelFont),
-      weight: 600,
-      color: C.textLow,
-      tracking: g(1.4),
-    });
+    icon(ctx, 'walk', g(L.cellR), g(L.labelCy), gf(g, L.iconBox), C.textLow);
     var stepTxt = grouped(data.steps);
     text(ctx, stepTxt, g(L.cellR), g(L.valueCy), {
       size: fitSize(ctx, stepTxt, g(L.cellMaxW), VALUE_SIZES.map(function (v) { return gf(g, v); }), 700, g(-0.5)),

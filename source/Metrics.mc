@@ -228,7 +228,7 @@ class Metrics {
 
             case Toybox.Weather.CONDITION_THUNDERSTORMS:
             case Toybox.Weather.CONDITION_SCATTERED_THUNDERSTORMS:
-            case Toybox.Weather.CONDITION_CHANCE_OF_LIGHTNING:
+            case Toybox.Weather.CONDITION_CHANCE_OF_THUNDERSTORMS:
             case Toybox.Weather.CONDITION_TORNADO:
             case Toybox.Weather.CONDITION_HURRICANE:
             case Toybox.Weather.CONDITION_TROPICAL_STORM:
