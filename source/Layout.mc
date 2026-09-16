@@ -116,10 +116,5 @@ module Layout {
     const BAT_ARC_W = 6;
     const BAT_ARC_SPAN = 46;  // degrees either side of bottom dead centre
 
-    // ---- always-on display ------------------------------------------------
-    const AOD_STRIP_CY = 152;
-    const AOD_TIME_CY = 227;
-    const AOD_BAT_CY = 312;
-
     const TRACK_LABEL = 1.4;  // letter spacing on small caps labels
 }

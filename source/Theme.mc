@@ -31,13 +31,6 @@ module Theme {
     const BAT_WARN    = 0xFF9500;
     const BAT_LOW     = 0xFF3B30;
 
-    // Always-on display: same composition, far fewer lit pixels.
-    const AOD_TEXT    = 0x606A73;
-    const AOD_DIM     = 0x4C555D;
-    const AOD_LOW     = 0x2E353D;
-    const AOD_ACCENT  = 0x8A4413;
-    const AOD_HAIR    = 0x161A1F;
-
     //! Zone 0 is "below zone 1" — a resting heart rate, not a missing one.
     function zoneColor(zone as Number) as Number {
         switch (zone) {

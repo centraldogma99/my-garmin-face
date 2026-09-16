@@ -114,10 +114,6 @@
     batArcW: 6,
     batArcSpan: 46, // degrees either side of bottom dead centre
 
-    /* always-on display: fewer elements, recomposed around the centre */
-    aodStripCy: 152,
-    aodTimeCy: 227,
-    aodBatCy: 312,
   };
 
   var VALUE_SIZES = [48, 43, 38, 33];
@@ -369,9 +365,9 @@
    * Sections
    * ------------------------------------------------------------------ */
 
-  function drawBezel(ctx, g, dim) {
+  function drawBezel(ctx, g) {
     ctx.beginPath();
-    ctx.strokeStyle = dim ? '#0E1216' : C.ring;
+    ctx.strokeStyle = C.ring;
     ctx.lineWidth = g(L.ringW);
     ctx.arc(g(227), g(227), g(L.ringR), 0, Math.PI * 2);
     ctx.stroke();
@@ -389,7 +385,7 @@
       var deg = (i - 3) * L.wdStep;
       var th = (deg * Math.PI) / 180;
       var on = i === today;
-      var color = on ? (opts.dim ? '#8A4413' : C.accent) : opts.dim ? '#2E353D' : C.textLow;
+      var color = on ? C.accent : C.textLow;
 
       ctx.save();
       ctx.translate(cx + Math.sin(th) * g(L.wdR), cy - Math.cos(th) * g(L.wdR));
@@ -414,18 +410,11 @@
   }
 
   function drawStrip(ctx, g, data, opts) {
-    var cy = opts.dim ? L.aodStripCy : L.stripCy;
-    var hi = opts.dim ? '#4C555D' : C.textVal;
-    var mid = opts.dim ? '#3B434B' : C.textMid;
+    var cy = L.stripCy;
+    var hi = C.textVal;
+    var mid = C.textMid;
 
-    rect(
-      ctx,
-      g(227) - g(1) / 2,
-      g(cy - (L.stripCy - L.stripDivTop)),
-      g(1),
-      g(L.stripDivBot - L.stripDivTop),
-      opts.dim ? '#161A1F' : C.hair,
-    );
+    rect(ctx, g(227) - g(1) / 2, g(L.stripDivTop), g(1), g(L.stripDivBot - L.stripDivTop), C.hair);
 
     text(ctx, pad2(data.month) + '.' + pad2(data.day), g(L.dateRight), g(cy), {
       size: gf(g, L.stripFont),
@@ -451,9 +440,9 @@
     var hh = pad2(data.hour);
     var mm = pad2(data.minute);
     var size = gf(g, L.timeFont);
-    var color = opts.dim ? '#606A73' : C.textHi;
+    var color = C.textHi;
     var cx = g(227);
-    var cy = g(opts.dim ? L.aodTimeCy : L.timeCy);
+    var cy = g(L.timeCy);
 
     tabular(ctx, hh, cx - g(L.colonHalfGap), cy, {
       size: size,
@@ -471,7 +460,7 @@
     });
 
     var sq = g(L.colonSq);
-    var ck = opts.dim ? '#6B3210' : C.accent;
+    var ck = C.accent;
     var ccy = cy + g(L.colonShift);
     rect(ctx, cx - sq / 2, ccy - g(L.colonDy) - sq / 2, sq, sq, ck);
     rect(ctx, cx - sq / 2, ccy + g(L.colonDy) - sq / 2, sq, sq, ck);
@@ -591,17 +580,15 @@
 
   function drawBattery(ctx, g, data, opts) {
     var pct = data.battery;
-    var col = opts.dim ? '#4C555D' : batteryColor(pct);
+    var col = batteryColor(pct);
 
     var cx = g(227);
-    var cy = opts.dim ? L.aodBatCy : L.batCy;
+    var cy = L.batCy;
 
-    if (!opts.dim) {
-      var from = 90 + L.batArcSpan;
-      var sweep = 2 * L.batArcSpan;
-      arc(ctx, cx, cx, g(L.batArcR), from, from - sweep, g(L.batArcW), C.arcTrack);
-      arc(ctx, cx, cx, g(L.batArcR), from, from - sweep * (pct / 100), g(L.batArcW), col);
-    }
+    var from = 90 + L.batArcSpan;
+    var sweep = 2 * L.batArcSpan;
+    arc(ctx, cx, cx, g(L.batArcR), from, from - sweep, g(L.batArcW), C.arcTrack);
+    arc(ctx, cx, cx, g(L.batArcR), from, from - sweep * (pct / 100), g(L.batArcW), col);
 
     /* numeric readout */
     var label = Math.round(pct) + '%';
@@ -640,9 +627,6 @@
     opts = opts || {};
     opts.weekdayLocale = opts.weekdayLocale || 'ko';
     FS = opts.fontScale || 1;
-    var dim = opts.mode === 'aod';
-    opts.dim = dim;
-
     var g = function (v) {
       return (v * size) / DESIGN;
     };
@@ -650,17 +634,24 @@
     ctx.save();
     circle(ctx, size / 2, size / 2, size / 2, C.bg);
 
-    drawBezel(ctx, g, dim);
+    drawBezel(ctx, g);
     drawWeekdays(ctx, g, data, opts);
     drawStrip(ctx, g, data, opts);
     drawTime(ctx, g, data, opts);
-
-    /* Always-on display keeps only the time-critical layer lit. */
-    if (!dim) {
-      drawStatRow(ctx, g, data);
-      drawBodyBattery(ctx, g, data);
-    }
+    drawStatRow(ctx, g, data);
+    drawBodyBattery(ctx, g, data);
     drawBattery(ctx, g, data, opts);
+
+    /* Always-on display is the same face behind a row mask: every other
+       device row is blanked and the parity flips with the minute, which is
+       what AMOLED burn-in protection asks for (<=10% lit, no pixel lit for
+       three minutes). Mirrors ReconView.drawAodMask. */
+    if (opts.mode === 'aod') {
+      ctx.fillStyle = C.bg;
+      for (var y = data.minute % 2; y < size; y += 2) {
+        ctx.fillRect(0, y, size, 1);
+      }
+    }
 
     ctx.restore();
   }

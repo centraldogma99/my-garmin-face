@@ -78,18 +78,28 @@ class ReconView extends WatchUi.WatchFace {
         dc.setColor(Theme.BG, Theme.BG);
         dc.clear();
 
-        var dim = _lowPower;
-        drawBezel(dc, dim);
-        drawWeekdays(dc, dim);
-        drawStrip(dc, dim);
-        drawTime(dc, dim);
+        drawBezel(dc);
+        drawWeekdays(dc);
+        drawStrip(dc);
+        drawTime(dc);
+        drawStatRow(dc);
+        drawBodyBattery(dc);
+        drawBattery(dc);
 
-        // Always-on display keeps only the layer worth burning pixels for.
-        if (!dim) {
-            drawStatRow(dc);
-            drawBodyBattery(dc);
+        if (_lowPower) { drawAodMask(dc); }
+    }
+
+    //! Always-on display shows the very same face. AMOLED burn-in protection
+    //! demands at most 10% of pixels lit and no pixel lit for three minutes
+    //! straight, so every other row is blanked and the parity flips with the
+    //! minute: half the pixels, none of them on for longer than a minute.
+    private function drawAodMask(dc as Graphics.Dc) as Void {
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        dc.setColor(Theme.BG, Graphics.COLOR_TRANSPARENT);
+        for (var y = _metrics.minute % 2; y < h; y += 2) {
+            dc.drawLine(0, y, w, y);
         }
-        drawBattery(dc, dim);
     }
 
     function onEnterSleep() as Void {
@@ -104,8 +114,8 @@ class ReconView extends WatchUi.WatchFace {
 
     // ------------------------------------------------------------------ //
 
-    private function drawBezel(dc as Graphics.Dc, dim as Boolean) as Void {
-        dc.setColor(dim ? 0x0E1216 : Theme.RING, Graphics.COLOR_TRANSPARENT);
+    private function drawBezel(dc as Graphics.Dc) as Void {
+        dc.setColor(Theme.RING, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(Layout.u(Layout.RING_W));
         dc.drawCircle(Layout.cx, Layout.cy, Layout.u(Layout.RING_R));
         dc.setPenWidth(1);
@@ -150,7 +160,7 @@ class ReconView extends WatchUi.WatchFace {
         return null;
     }
 
-    private function drawWeekdays(dc as Graphics.Dc, dim as Boolean) as Void {
+    private function drawWeekdays(dc as Graphics.Dc) as Void {
         var r = Layout.f(Layout.WD_R);
         // The glyphs are rotated to stand on their radius, so what the highlight
         // has to clear radially is the em box height, not the glyph width.
@@ -168,12 +178,7 @@ class ReconView extends WatchUi.WatchFace {
             var x = Layout.cx + (Math.sin(th) * r).toNumber();
             var y = Layout.cy - (Math.cos(th) * r).toNumber();
 
-            var color;
-            if (on) {
-                color = dim ? Theme.AOD_ACCENT : Theme.ACCENT;
-            } else {
-                color = dim ? Theme.AOD_LOW : Theme.TEXT_LOW;
-            }
+            var color = on ? Theme.ACCENT : Theme.TEXT_LOW;
 
             Gfx.angledText(dc, x, y, _wdFont, _weekdays[i],
                 Graphics.TEXT_JUSTIFY_CENTER, color, deg);
@@ -192,18 +197,13 @@ class ReconView extends WatchUi.WatchFace {
         }
     }
 
-    private function drawStrip(dc as Graphics.Dc, dim as Boolean) as Void {
-        var cy = dim ? Layout.AOD_STRIP_CY : Layout.STRIP_CY;
-        var hi = dim ? Theme.AOD_DIM : Theme.TEXT_VAL;
-        var mid = dim ? Theme.AOD_LOW : Theme.TEXT_MID;
-        var y = Layout.u(cy);
+    private function drawStrip(dc as Graphics.Dc) as Void {
+        var hi = Theme.TEXT_VAL;
+        var mid = Theme.TEXT_MID;
+        var y = Layout.u(Layout.STRIP_CY);
 
-        Gfx.box(dc,
-            Layout.cx,
-            Layout.u(cy - (Layout.STRIP_CY - Layout.STRIP_DIV_TOP)),
-            1,
-            Layout.u(Layout.STRIP_DIV_H),
-            dim ? Theme.AOD_HAIR : Theme.HAIR);
+        Gfx.box(dc, Layout.cx, Layout.u(Layout.STRIP_DIV_TOP), 1,
+            Layout.u(Layout.STRIP_DIV_H), Theme.HAIR);
 
         var date = _metrics.month.format("%02d") + "." + _metrics.day.format("%02d");
         Gfx.text(dc, Layout.u(Layout.DATE_RIGHT), y, _stripFont, date,
@@ -217,9 +217,9 @@ class ReconView extends WatchUi.WatchFace {
             Graphics.TEXT_JUSTIFY_LEFT, hi);
     }
 
-    private function drawTime(dc as Graphics.Dc, dim as Boolean) as Void {
-        var y = Layout.u(dim ? Layout.AOD_TIME_CY : Layout.TIME_CY);
-        var color = dim ? Theme.AOD_TEXT : Theme.TEXT_HI;
+    private function drawTime(dc as Graphics.Dc) as Void {
+        var y = Layout.u(Layout.TIME_CY);
+        var color = Theme.TEXT_HI;
         var gap = Layout.u(Layout.COLON_GAP);
 
         Gfx.text(dc, Layout.cx - gap, y, TIME_FONT, _metrics.hour.format("%02d"),
@@ -230,7 +230,7 @@ class ReconView extends WatchUi.WatchFace {
         var sq = Layout.u(Layout.COLON_SQ);
         var dy = Layout.u(Layout.COLON_DY);
         var cy = y + Layout.u(Layout.COLON_SHIFT);
-        var ck = dim ? Theme.AOD_ACCENT : Theme.ACCENT;
+        var ck = Theme.ACCENT;
         Gfx.box(dc, Layout.cx - sq / 2, cy - dy - sq / 2, sq, sq, ck);
         Gfx.box(dc, Layout.cx - sq / 2, cy + dy - sq / 2, sq, sq, ck);
     }
@@ -342,23 +342,21 @@ class ReconView extends WatchUi.WatchFace {
         }
     }
 
-    private function drawBattery(dc as Graphics.Dc, dim as Boolean) as Void {
+    private function drawBattery(dc as Graphics.Dc) as Void {
         var pct = _metrics.battery;
-        var col = dim ? Theme.AOD_DIM : Theme.batteryColor(pct);
-        var cy = Layout.u(dim ? Layout.AOD_BAT_CY : Layout.BAT_CY);
+        var col = Theme.batteryColor(pct);
+        var cy = Layout.u(Layout.BAT_CY);
 
-        if (!dim) {
-            var from = 90.0 + Layout.BAT_ARC_SPAN;
-            var sweep = 2.0 * Layout.BAT_ARC_SPAN;
-            var r = Layout.u(Layout.BAT_ARC_R);
+        var from = 90.0 + Layout.BAT_ARC_SPAN;
+        var sweep = 2.0 * Layout.BAT_ARC_SPAN;
+        var r = Layout.u(Layout.BAT_ARC_R);
 
-            dc.setPenWidth(Layout.u(Layout.BAT_ARC_W));
-            Gfx.fill(dc, Theme.ARC_TRACK);
-            Gfx.arcScreen(dc, Layout.cx, Layout.cy, r, from, from - sweep);
-            Gfx.fill(dc, col);
-            Gfx.arcScreen(dc, Layout.cx, Layout.cy, r, from, from - sweep * pct / 100.0);
-            dc.setPenWidth(1);
-        }
+        dc.setPenWidth(Layout.u(Layout.BAT_ARC_W));
+        Gfx.fill(dc, Theme.ARC_TRACK);
+        Gfx.arcScreen(dc, Layout.cx, Layout.cy, r, from, from - sweep);
+        Gfx.fill(dc, col);
+        Gfx.arcScreen(dc, Layout.cx, Layout.cy, r, from, from - sweep * pct / 100.0);
+        dc.setPenWidth(1);
 
         var label = Math.round(pct).toNumber().format("%d") + "%";
         var tw = dc.getTextWidthInPixels(label, _batFont);

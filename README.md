@@ -64,9 +64,11 @@ bounding box. Wide values (a six-digit step count) step down through a font
 ladder rather than spilling into the neighbouring cell, and the body battery
 window tag (`12H`) is dropped when a three-digit body battery needs the room.
 
-**Always-on display** keeps the weekday arc, date, weather, time and battery
-percentage, recomposed around the centre so the face does not look half-drawn,
-and drops the bezel gauge, stat row and graph.
+**Always-on display** is the same face. AMOLED burn-in protection allows at
+most 10% of pixels lit and no pixel lit for three minutes straight, so in
+low-power mode every other row is blanked and the row parity flips with the
+minute: the face reads at half brightness and no pixel stays on for longer
+than a minute. The Forerunner 265 simulator reports 3.2% luminance usage.
 
 ## Layout and preview
 
@@ -218,11 +220,6 @@ Check them in this order:
 - The body battery window is fixed at 12 hours and its history is rebuilt at
   most once every 5 minutes; walking the sensor iterator is the most expensive
   thing this face does.
-- **No burn-in mitigation.** The always-on layer is dimmed but does not cycle
-  its position between minutes, which AMOLED devices want. The hook for it is
-  `Layout.AOD_*` plus the three AOD anchors read in `drawStrip`, `drawTime` and
-  `drawBattery` — shifting those by a couple of pixels per minute is the whole
-  change. It was left out rather than shipped untested.
 
 ## Third-party assets
 
