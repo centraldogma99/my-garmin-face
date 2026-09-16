@@ -86,7 +86,17 @@ class ReconView extends WatchUi.WatchFace {
         drawBodyBattery(dc);
         drawBattery(dc);
 
-        if (_lowPower) { drawAodMask(dc); }
+        if (lowPower()) { drawAodMask(dc); }
+    }
+
+    //! onEnterSleep is skipped when the face starts while the watch is already
+    //! in low power (after a notification, or right after being selected), so
+    //! ask the system as well where the API allows it.
+    private function lowPower() as Boolean {
+        if (System has :getDisplayMode) {
+            return System.getDisplayMode() == System.DISPLAY_MODE_LOW_POWER;
+        }
+        return _lowPower;
     }
 
     //! Always-on display shows the very same face. AMOLED burn-in protection
@@ -94,11 +104,13 @@ class ReconView extends WatchUi.WatchFace {
     //! straight, so every other row is blanked and the parity flips with the
     //! minute: half the pixels, none of them on for longer than a minute.
     private function drawAodMask(dc as Graphics.Dc) as Void {
+        // fillRectangle, not drawLine: anti-aliasing is on, and an AA line
+        // could smear over two rows instead of blanking one.
         var w = dc.getWidth();
         var h = dc.getHeight();
         dc.setColor(Theme.BG, Graphics.COLOR_TRANSPARENT);
         for (var y = _metrics.minute % 2; y < h; y += 2) {
-            dc.drawLine(0, y, w, y);
+            dc.fillRectangle(0, y, w, 1);
         }
     }
 
